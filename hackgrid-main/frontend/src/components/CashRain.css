@@ -1,0 +1,73 @@
+@keyframes cashFall {
+  0% {
+    transform: translateY(-10vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--cash-opacity, 0.8);
+  }
+  90% {
+    opacity: var(--cash-opacity, 0.8);
+  }
+  100% {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+
+@keyframes cashSpinNormal {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg);
+  }
+}
+
+@keyframes cashSpinReverse {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(-720deg) rotateY(-360deg) rotateZ(-180deg);
+  }
+}
+
+@keyframes cashSway {
+  0% {
+    transform: translateX(-40px);
+  }
+  100% {
+    transform: translateX(40px);
+  }
+}
+
+.cash-rain-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1; /* Below the modals and nav, but above background */
+  perspective: 1000px; /* For 3D rotation */
+}
+
+.cash-note-fall {
+  /* Apply a subtle glow on the outer container so it persists during transforms */
+  filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.3));
+}
+
+.cash-note-inner {
+  width: 100px;
+  height: 44px;
+  /* Remove old gradient styling, rely on SVG */
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.25));
+}
+
