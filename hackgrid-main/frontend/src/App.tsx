@@ -4,8 +4,9 @@ import { FirebreakMeter } from './components/FirebreakMeter';
 import { SignalHeatmap } from './components/SignalHeatmap';
 import { NarrativePanel } from './components/NarrativePanel';
 import { OutlookChart } from './components/OutlookChart';
+import { TrendTab } from './components/TrendTab';
 import { ActionPlaybook } from './components/ActionPlaybook';
-import { SensitivitySimulator } from './components/SensitivitySimulator';
+import { ScenarioSimulator } from './components/ScenarioSimulator';
 import { HistoryDrawer } from './components/HistoryDrawer';
 import { ExportModal } from './components/ExportModal';
 import { UploadModal } from './components/UploadModal';
@@ -13,7 +14,7 @@ import { AiDisclaimer } from './components/AiDisclaimer';
 import type { FirebreakAnalysis } from './types/firebreak';
 import { AlertTriangle, Sparkles, Database } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from './config';
 
 export function App() {
   const [analysis, setAnalysis] = useState<FirebreakAnalysis | null>(null);
@@ -25,6 +26,8 @@ export function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [engineName, setEngineName] = useState<string>('Gemini 2.5 Flash');
+  const [selectedIndustry, setSelectedIndustry] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'results' | 'trend'>('results');
 
   const handleSelectHistoricalRun = (run: any) => {
     // Reconstruct full analysis object if loaded from DB
@@ -58,7 +61,8 @@ export function App() {
 
     try {
       setLoadingStep('Executing Python metric & 30/60/90 outlook computation...');
-      const response = await fetch(`${API_BASE}/api/demo/${scenario}`, {
+      const industryParam = selectedIndustry ? `?industry=${encodeURIComponent(selectedIndustry)}` : '';
+      const response = await fetch(`${API_BASE}/api/demo/${scenario}${industryParam}`, {
         method: 'POST',
       });
 
@@ -81,11 +85,13 @@ export function App() {
     }
   };
 
-  const handleCustomUpload = async (file: File) => {
-    setIsLoading(true);
-    setError(null);
+  const handleCustomUpload = async (file: File, entityName: string) => {
     setIsUploadOpen(false);
-    setActiveScenario('custom');
+    setIsLoading(true);
+    setLoadingStep('Uploading and parsing CSV in-memory...');
+    setError(null);
+    setAnalysis(null);
+    setActiveTab('results');
     setLoadingStep('Validating and ingesting CSV in-memory (No raw persistence)...');
 
     const formData = new FormData();
@@ -93,7 +99,15 @@ export function App() {
 
     try {
       setLoadingStep('Computing 6 signal dimensions & trend projections...');
-      const response = await fetch(`${API_BASE}/api/upload`, {
+      let industryParam = selectedIndustry ? `industry=${encodeURIComponent(selectedIndustry)}` : '';
+      let entityParam = entityName ? `entity_name=${encodeURIComponent(entityName)}` : '';
+      let queryParams = [industryParam, entityParam].filter(Boolean).join('&');
+      let url = `${API_BASE}/api/upload`;
+      if (queryParams) {
+        url += `?${queryParams}`;
+      }
+      
+      const response = await fetch(url, {
         method: 'POST',
         body: formData,
       });
@@ -128,9 +142,44 @@ export function App() {
         onOpenExport={() => setIsExportOpen(true)}
         isLoading={isLoading}
         activeScenario={activeScenario}
-        isSynthetic={analysis?.is_synthetic ?? true}
         engineName={engineName}
       />
+
+      {/* Tab Toggle */}
+      <div style={{ maxWidth: '1540px', margin: '20px auto 0 auto', padding: '0 28px', display: 'flex', gap: '8px', width: '100%' }}>
+        <button
+          onClick={() => setActiveTab('results')}
+          style={{
+            background: activeTab === 'results' ? 'var(--primary-accent)' : 'transparent',
+            color: activeTab === 'results' ? '#0f172a' : 'var(--text-primary)',
+            border: activeTab === 'results' ? 'none' : '1px solid var(--border-medium)',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Analysis Results
+        </button>
+        <button
+          onClick={() => setActiveTab('trend')}
+          style={{
+            background: activeTab === 'trend' ? 'var(--primary-accent)' : 'transparent',
+            color: activeTab === 'trend' ? '#0f172a' : 'var(--text-primary)',
+            border: activeTab === 'trend' ? 'none' : '1px solid var(--border-medium)',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Trend Tracking
+        </button>
+      </div>
 
       {/* Main Content Area */}
       <main style={{
@@ -141,7 +190,7 @@ export function App() {
         flex: 1,
       }}>
         {/* Scenario Info Bar */}
-        {analysis && (
+        {analysis && activeTab === 'results' && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -244,12 +293,12 @@ export function App() {
         )}
 
         {/* Dashboard Panels */}
-        {analysis && (
+        {analysis && activeTab === 'results' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
             {/* Top Grid: Meter (40%) + Narrative (60%) */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(320px, 4.2fr) minmax(450px, 6.8fr)',
+              display: 'flex',
+              flexDirection: 'column',
               gap: '22px',
               alignItems: 'stretch',
             }}>
@@ -267,8 +316,8 @@ export function App() {
 
             {/* Middle Grid: 30/60/90 Outlook (50%) + Action Playbook (50%) */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
+              display: 'flex',
+              flexDirection: 'column',
               gap: '22px',
               alignItems: 'stretch',
             }}>
@@ -277,11 +326,16 @@ export function App() {
             </div>
 
             {/* Lower Grid: 6-Dimension Signal Heatmap (Full Width) */}
-            <SignalHeatmap metrics={analysis.metrics_summary} />
+            <SignalHeatmap metrics={analysis.metrics_summary} benchmarkDeltas={analysis.benchmark_deltas} />
 
             {/* What-If Operational Sensitivity Simulator */}
-            <SensitivitySimulator analysis={analysis} />
+            <ScenarioSimulator analysis={analysis} />
           </div>
+        )}
+
+        {/* Trend Tab Rendering */}
+        {!isLoading && !error && activeTab === 'trend' && (
+          <TrendTab />
         )}
 
         {/* Persistent AI Disclaimer (PRD OC-02, T-23) */}
@@ -294,6 +348,8 @@ export function App() {
         onClose={() => setIsUploadOpen(false)}
         onUpload={handleCustomUpload}
         isLoading={isLoading}
+        selectedIndustry={selectedIndustry}
+        onIndustryChange={setSelectedIndustry}
       />
 
       {/* History Runs Drawer */}

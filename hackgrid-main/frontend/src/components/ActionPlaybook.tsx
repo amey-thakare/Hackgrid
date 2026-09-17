@@ -22,7 +22,7 @@ export const ActionPlaybook: React.FC<ActionPlaybookProps> = ({ actions }) => {
       return <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary-accent)', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>High Directional Impact</span>;
     }
     if (impact.toLowerCase().includes('medium')) {
-      return <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>Medium Directional Impact</span>;
+      return <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--severity-elevated)', background: 'var(--severity-elevated-bg)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--severity-elevated-border)' }}>Medium Directional Impact</span>;
     }
     return <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>Low Impact</span>;
   };
@@ -33,7 +33,7 @@ export const ActionPlaybook: React.FC<ActionPlaybookProps> = ({ actions }) => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckSquare size={18} color="var(--primary-accent)" />
-            <h2 style={{ fontSize: '1.1rem', color: '#ffffff', letterSpacing: '-0.01em' }}>
+            <h2 className="neon-text-primary" style={{ fontSize: '1.1rem', letterSpacing: '-0.01em' }}>
               Preventive Action Playbook
             </h2>
           </div>

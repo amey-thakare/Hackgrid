@@ -1,11 +1,15 @@
-import React, { useState, useRef } from 'react';
-import { Upload, X, FileText, AlertCircle, CheckCircle, Download } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, X, FileText, AlertCircle, CheckCircle, Download, Building2 } from 'lucide-react';
+
+import { API_BASE } from '../config';
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (file: File) => void;
+  onUpload: (file: File, entityName: string) => void;
   isLoading: boolean;
+  selectedIndustry: string;
+  onIndustryChange: (industry: string) => void;
 }
 
 export const UploadModal: React.FC<UploadModalProps> = ({
@@ -13,11 +17,30 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   onClose,
   onUpload,
   isLoading,
+  selectedIndustry,
+  onIndustryChange,
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [entityName, setEntityName] = useState<string>('');
+  const [industries, setIndustries] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch available industries from the backend
+  useEffect(() => {
+    if (isOpen) {
+      fetch(`${API_BASE}/api/benchmarks`)
+        .then(res => res.json())
+        .then(data => {
+          setIndustries(Object.keys(data));
+        })
+        .catch(() => {
+          // Silently fail — benchmarks are optional
+          setIndustries([]);
+        });
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -63,7 +86,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
   const handleSubmit = () => {
     if (selectedFile) {
-      onUpload(selectedFile);
+      onUpload(selectedFile, entityName);
     }
   };
 
@@ -149,6 +172,83 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               <span>Download Standard Template CSV</span>
             </a>
           </div>
+        </div>
+
+        {/* Industry Benchmark Selector */}
+        {industries.length > 0 && (
+          <div style={{
+            marginBottom: '16px',
+            padding: '12px 14px',
+            borderRadius: '10px',
+            background: 'rgba(14, 165, 233, 0.06)',
+            border: '1px solid rgba(14, 165, 233, 0.15)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+              <Building2 size={15} color="var(--primary-accent)" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Industry Benchmark (Optional)
+              </span>
+            </div>
+            <select
+              value={selectedIndustry}
+              onChange={(e) => onIndustryChange(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-medium)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'auto',
+              }}
+            >
+              <option value="">— No benchmark (default) —</option>
+              {industries.map((ind) => (
+                <option key={ind} value={ind}>{ind}</option>
+              ))}
+            </select>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+              Selecting an industry adds sector median comparisons to each signal dimension.
+            </p>
+          </div>
+        )}
+
+        {/* Entity Name Input */}
+        <div style={{
+          marginBottom: '16px',
+          padding: '12px 14px',
+          borderRadius: '10px',
+          background: 'var(--bg-surface-elevated)',
+          border: '1px solid var(--border-medium)',
+        }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+              <Building2 size={15} color="var(--text-primary)" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Entity Name (Optional)
+              </span>
+            </div>
+            <input 
+              type="text" 
+              value={entityName}
+              onChange={(e) => setEntityName(e.target.value)}
+              placeholder="e.g. Acme Corp (Q3)"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-medium)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                outline: 'none',
+              }}
+            />
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+              Label this analysis run for historical trend tracking.
+            </p>
         </div>
 
         {/* Selected file card */}

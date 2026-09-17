@@ -8,7 +8,6 @@ interface NavbarProps {
   onOpenExport: () => void;
   isLoading: boolean;
   activeScenario: string;
-  isSynthetic: boolean;
   engineName: string;
 }
 
@@ -19,7 +18,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenExport,
   isLoading,
   activeScenario,
-  isSynthetic,
   engineName,
 }) => {
   return (
@@ -54,24 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
               FIN<span style={{ color: 'var(--primary-accent)' }}>SIGHT</span>
             </span>
-            <span style={{
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              padding: '2px 8px',
-              borderRadius: '6px',
-              background: 'rgba(56, 189, 248, 0.12)',
-              color: 'var(--primary-accent)',
-              border: '1px solid rgba(56, 189, 248, 0.25)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              Financial Firebreak v1.1
-            </span>
-            {isSynthetic && (
-              <span className="badge badge-synthetic" title="PRD DC-04: Demo data is strictly synthetic">
-                <Sparkles size={11} /> Synthetic Data Mode
-              </span>
-            )}
+
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             AI-Powered Early-Warning Decision Support &bull; Team White-Monster

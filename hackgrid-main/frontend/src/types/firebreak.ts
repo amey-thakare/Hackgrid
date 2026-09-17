@@ -111,9 +111,30 @@ export interface PreventiveAction {
   rationale: string;
 }
 
+export interface BenchmarkSignalDelta {
+  user_value: number;
+  sector_median: number;
+  delta_pct: number;
+  direction: "above" | "below" | "at";
+}
+
+export interface BenchmarkDeltas {
+  industry: string;
+  signals: {
+    dso_days: BenchmarkSignalDelta;
+    dpo_days: BenchmarkSignalDelta;
+    inventory_days: BenchmarkSignalDelta;
+    cash_conversion_cycle: BenchmarkSignalDelta;
+    vendor_concentration_hhi: BenchmarkSignalDelta;
+    expense_anomaly_baseline: BenchmarkSignalDelta;
+  };
+  benchmark_narrative_context: string;
+}
+
 export interface FirebreakAnalysis {
   id?: string;
   dataset_name: string;
+  entity_name?: string;
   scenario_title?: string;
   scenario_description?: string;
   is_synthetic: boolean;
@@ -130,4 +151,9 @@ export interface FirebreakAnalysis {
   engine: string;
   heuristic_thresholds_note: string;
   persisted_via?: string;
+  benchmark_deltas?: BenchmarkDeltas;
+  signal_scores?: Record<string, number>;
+  top_signals?: string[];
+  created_at?: string;
 }
+

@@ -16,14 +16,21 @@ import time
 from typing import Any, Dict, Optional
 from fastapi import FastAPI, File, HTTPException, UploadFile, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from backend.ingestion import parse_csv_in_memory, IngestionError, MAX_FILE_SIZE_BYTES
 from backend.evidence import build_evidence_matrix
-from backend.gemini_client import analyze_with_gemini, AI_DISCLAIMER_TEXT, GEMINI_API_KEY
+from backend.gemini_client import analyze_with_gemini, AI_DISCLAIMER_TEXT, GEMINI_API_KEY, explain_simulation
 from backend.db import save_analysis_run, get_recent_runs
-from backend.sensitivity import run_sensitivity_simulation, SensitivitySimulationRequest
+from backend.sensitivity import (
+    SensitivitySimulationRequest,
+    run_sensitivity_simulation,
+    ScenarioSimulationRequest,
+    run_scenario_simulation
+)
 from backend.data_generator import generate_crisis_dataset
+from backend.pdf_report import generate_report_pdf
+from backend.benchmark_engine import load_benchmarks, compute_benchmark_deltas
 
 app = FastAPI(
     title="FinSight Financial Firebreak API",
@@ -53,7 +60,11 @@ def health_check():
     }
 
 
-def _run_full_analysis_pipeline(df, filename: str, is_synthetic: bool = False, missing_cols: list = None) -> Dict[str, Any]:
+def _run_full_analysis_pipeline(
+    df, filename: str, is_synthetic: bool = False,
+    missing_cols: list = None, industry: Optional[str] = None,
+    entity_name: Optional[str] = None,
+) -> Dict[str, Any]:
     """Execute deterministic financial computation -> single structured AI synthesis -> DB persistence."""
     start_time = time.time()
 
@@ -69,6 +80,15 @@ def _run_full_analysis_pipeline(df, filename: str, is_synthetic: bool = False, m
     metrics = evidence_bundle["metrics"]
     outlook = evidence_bundle["outlook"]
 
+    # 1b. Compute industry benchmark deltas if industry is specified (purely additive)
+    benchmark_deltas = None
+    if industry:
+        benchmark_deltas = compute_benchmark_deltas(metrics, industry)
+        if benchmark_deltas:
+            # Inject benchmark context into the evidence payload sent to the AI
+            evidence_payload["benchmark_context"] = benchmark_deltas["benchmark_narrative_context"]
+            evidence_payload["benchmark_industry"] = industry
+
     # 2. Single structured generative AI reasoning step
     ai_result = analyze_with_gemini(evidence_payload)
 
@@ -77,6 +97,7 @@ def _run_full_analysis_pipeline(df, filename: str, is_synthetic: bool = False, m
     # 3. Formulate unified presentation payload
     output = {
         "dataset_name": filename,
+        "entity_name": entity_name or filename,
         "is_synthetic": is_synthetic,
         "processing_time_seconds": duration,
         "financial_stress_index": ai_result.get("financial_stress_index", evidence_bundle["computed_index"]),
@@ -93,6 +114,10 @@ def _run_full_analysis_pipeline(df, filename: str, is_synthetic: bool = False, m
         "heuristic_thresholds_note": "Thresholds and zones are prototype design heuristics (PRD OC-05).",
     }
 
+    # 3b. Attach benchmark deltas to the frontend output (additive, only if industry was set)
+    if benchmark_deltas:
+        output["benchmark_deltas"] = benchmark_deltas
+
     # 4. Save to Supabase (or SQLite fallback) - never saving raw CSV rows
     try:
         saved_record = save_analysis_run(output)
@@ -105,7 +130,11 @@ def _run_full_analysis_pipeline(df, filename: str, is_synthetic: bool = False, m
 
 
 @app.post("/api/upload")
-async def upload_financial_csv(file: UploadFile = File(...)):
+async def upload_financial_csv(
+    file: UploadFile = File(...),
+    industry: Optional[str] = Query(None, description="Industry sector for benchmark comparison"),
+    entity_name: Optional[str] = Query(None, description="Name of the entity being analyzed"),
+):
     """
     Ingests financial CSV in memory, computes evidence, and produces Firebreak analysis.
     Satisfies constraints DC-01, DC-02, DC-03, AC-01, AC-05.
@@ -136,13 +165,18 @@ async def upload_financial_csv(file: UploadFile = File(...)):
         filename=file.filename,
         is_synthetic=False,
         missing_cols=missing_cols,
+        industry=industry,
+        entity_name=entity_name,
     )
 
     return JSONResponse(content=result)
 
 
 @app.post("/api/demo/{scenario}")
-def load_demo_scenario(scenario: str):
+def load_demo_scenario(
+    scenario: str,
+    industry: Optional[str] = Query(None, description="Industry sector for benchmark comparison"),
+):
     """
     1-Click Synthetic Demo Loader (PRD Sec 5.5, T-22).
     Pre-loaded synthetic datasets clearly labeled synthetic (DC-04).
@@ -159,11 +193,19 @@ def load_demo_scenario(scenario: str):
         filename=meta["filename"],
         is_synthetic=True,
         missing_cols=[],
+        industry=industry,
+        entity_name=meta["title"],
     )
     result["scenario_title"] = meta["title"]
     result["scenario_description"] = meta["description"]
 
     return JSONResponse(content=result)
+
+
+@app.get("/api/benchmarks")
+def get_benchmarks():
+    """Return the full industry benchmark data for the frontend selector."""
+    return load_benchmarks()
 
 
 @app.get("/api/runs")
@@ -173,6 +215,15 @@ def list_analysis_runs(limit: int = Query(10, ge=1, le=50)):
     return {"runs": runs, "count": len(runs)}
 
 
+@app.get("/api/runs/latest")
+def get_latest_run():
+    """Retrieve the single most recent analysis run."""
+    runs = get_recent_runs(limit=1)
+    if not runs:
+        raise HTTPException(status_code=404, detail="No analysis runs found.")
+    return runs[0]
+
+
 @app.post("/api/simulate-sensitivity")
 def simulate_sensitivity(req: SensitivitySimulationRequest):
     """
@@ -180,6 +231,29 @@ def simulate_sensitivity(req: SensitivitySimulationRequest):
     """
     res = run_sensitivity_simulation(req)
     return JSONResponse(content=res)
+
+
+@app.post("/api/simulate")
+def simulate_scenario(req: ScenarioSimulationRequest):
+    """
+    Runs deterministic scoring for absolute value what-if scenarios.
+    """
+    res = run_scenario_simulation(req)
+    return JSONResponse(content=res)
+
+
+@app.post("/api/simulate/explain")
+async def simulate_scenario_explain(request: Request):
+    """
+    Generates AI natural language explanation for simulated scenario.
+    """
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body.")
+    
+    explanation = explain_simulation(payload)
+    return JSONResponse(content={"explanation": explanation})
 
 
 @app.get("/api/sample-csv")
@@ -192,4 +266,33 @@ def download_sample_csv():
         content=csv_text,
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=sample_financial_export.csv"}
+    )
+
+
+@app.post("/api/export/pdf")
+async def export_pdf_report(request: Request):
+    """Generate a professional multi-page PDF report from analysis results."""
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body.")
+
+    if not payload.get("financial_stress_index") and payload.get("financial_stress_index") != 0:
+        raise HTTPException(status_code=400, detail="Missing financial_stress_index in payload.")
+
+    try:
+        pdf_bytes = generate_report_pdf(payload)
+    except Exception as e:
+        print(f"PDF generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+    entity_name = (payload.get("entity_name") or payload.get("dataset_name", "Report")).replace(" ", "_").replace(".csv", "")
+    from datetime import datetime
+    date_str = datetime.utcnow().strftime("%Y%m%d")
+    filename = f"FinSight_Report_{entity_name}_{date_str}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )

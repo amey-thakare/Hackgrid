@@ -39,6 +39,12 @@ def _init_sqlite_db():
             preventive_actions TEXT NOT NULL
         )
     """)
+    # Safely add new columns for historical trend tracking if they don't exist
+    for col, col_type in [("entity_name", "TEXT"), ("signal_scores", "TEXT"), ("top_signals", "TEXT")]:
+        try:
+            cursor.execute(f"ALTER TABLE analysis_runs ADD COLUMN {col} {col_type}")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
     conn.commit()
     conn.close()
 
@@ -65,10 +71,28 @@ def save_analysis_run(run_data: Dict[str, Any]) -> Dict[str, Any]:
     run_id = run_data.get("id") or str(uuid.uuid4())
     created_at = run_data.get("created_at") or datetime.now(timezone.utc).isoformat()
     dataset_name = run_data.get("dataset_name", "Uploaded Data")
+    entity_name = run_data.get("entity_name") or dataset_name
     is_synthetic = 1 if run_data.get("is_synthetic", False) else 0
     stress_index = float(run_data.get("financial_stress_index", 0.0))
     severity_zone = str(run_data.get("severity_zone", "Moderate"))
-    metrics_summary = json.dumps(run_data.get("metrics_summary", {}))
+    
+    metrics = run_data.get("metrics_summary", {})
+    metrics_summary = json.dumps(metrics)
+    
+    # Extract signal_scores from the 6 core metrics
+    signal_scores_dict = {
+        "receivables": float(metrics.get("receivables_health", {}).get("severity_score", 0)),
+        "payment_behavior": float(metrics.get("payment_behavior", {}).get("severity_score", 0)),
+        "vendor_concentration": float(metrics.get("supplier_concentration", {}).get("severity_score", 0)),
+        "inventory": float(metrics.get("inventory_efficiency", {}).get("severity_score", 0)),
+        "expenses": float(metrics.get("expense_anomalies", {}).get("severity_score", 0)),
+        "cash_flow": float(metrics.get("cash_flow_efficiency", {}).get("severity_score", 0))
+    }
+    
+    # Compute top 2 flagged signals
+    sorted_signals = sorted(signal_scores_dict.items(), key=lambda x: x[1], reverse=True)
+    top_signals_list = [k for k, v in sorted_signals[:2] if v > 0]
+    
     narrative = str(run_data.get("risk_chain_narrative", ""))
     signal_combinations = json.dumps(run_data.get("signal_combinations", []))
     outlook = json.dumps(run_data.get("outlook", {}))
@@ -78,6 +102,7 @@ def save_analysis_run(run_data: Dict[str, Any]) -> Dict[str, Any]:
         "id": run_id,
         "created_at": created_at,
         "dataset_name": dataset_name,
+        "entity_name": entity_name,
         "is_synthetic": is_synthetic,
         "financial_stress_index": stress_index,
         "severity_zone": severity_zone,
@@ -86,6 +111,8 @@ def save_analysis_run(run_data: Dict[str, Any]) -> Dict[str, Any]:
         "signal_combinations": signal_combinations,
         "outlook": outlook,
         "preventive_actions": actions,
+        "signal_scores": json.dumps(signal_scores_dict),
+        "top_signals": json.dumps(top_signals_list),
     }
 
     supabase = _get_supabase_client()
@@ -102,14 +129,14 @@ def save_analysis_run(run_data: Dict[str, Any]) -> Dict[str, Any]:
     cursor = conn.cursor()
     cursor.execute("""
         INSERT OR REPLACE INTO analysis_runs (
-            id, created_at, dataset_name, is_synthetic, financial_stress_index,
+            id, created_at, dataset_name, entity_name, is_synthetic, financial_stress_index,
             severity_zone, metrics_summary, risk_chain_narrative,
-            signal_combinations, outlook, preventive_actions
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            signal_combinations, outlook, preventive_actions, signal_scores, top_signals
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        run_id, created_at, dataset_name, is_synthetic, stress_index,
+        run_id, created_at, dataset_name, entity_name, is_synthetic, stress_index,
         severity_zone, metrics_summary, narrative,
-        signal_combinations, outlook, actions
+        signal_combinations, outlook, actions, record["signal_scores"], record["top_signals"]
     ))
     conn.commit()
     conn.close()
@@ -144,9 +171,10 @@ def get_recent_runs(limit: int = 10) -> List[Dict[str, Any]]:
     results = []
     for row in rows:
         d = dict(row)
-        for field in ["metrics_summary", "signal_combinations", "outlook", "preventive_actions"]:
+        for field in ["metrics_summary", "signal_combinations", "outlook", "preventive_actions", "signal_scores", "top_signals"]:
             try:
-                d[field] = json.loads(d[field])
+                if d.get(field):
+                    d[field] = json.loads(d[field])
             except Exception:
                 pass
         results.append(d)

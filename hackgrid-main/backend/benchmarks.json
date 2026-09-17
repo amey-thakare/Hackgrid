@@ -1,0 +1,58 @@
+{
+  "Manufacturing": {
+    "dso_days": 45,
+    "dpo_days": 40,
+    "inventory_days": 60,
+    "cash_conversion_cycle": 65,
+    "vendor_concentration_hhi": 1800,
+    "expense_anomaly_baseline": 1.0
+  },
+  "Retail": {
+    "dso_days": 5,
+    "dpo_days": 30,
+    "inventory_days": 45,
+    "cash_conversion_cycle": 20,
+    "vendor_concentration_hhi": 1200,
+    "expense_anomaly_baseline": 0.8
+  },
+  "SaaS / Technology": {
+    "dso_days": 30,
+    "dpo_days": 35,
+    "inventory_days": 0,
+    "cash_conversion_cycle": -5,
+    "vendor_concentration_hhi": 900,
+    "expense_anomaly_baseline": 1.5
+  },
+  "Healthcare": {
+    "dso_days": 55,
+    "dpo_days": 45,
+    "inventory_days": 30,
+    "cash_conversion_cycle": 40,
+    "vendor_concentration_hhi": 2200,
+    "expense_anomaly_baseline": 1.2
+  },
+  "FMCG / Consumer Goods": {
+    "dso_days": 35,
+    "dpo_days": 50,
+    "inventory_days": 40,
+    "cash_conversion_cycle": 25,
+    "vendor_concentration_hhi": 1500,
+    "expense_anomaly_baseline": 0.9
+  },
+  "Logistics": {
+    "dso_days": 40,
+    "dpo_days": 35,
+    "inventory_days": 15,
+    "cash_conversion_cycle": 20,
+    "vendor_concentration_hhi": 2000,
+    "expense_anomaly_baseline": 1.1
+  },
+  "Financial Services": {
+    "dso_days": 20,
+    "dpo_days": 25,
+    "inventory_days": 0,
+    "cash_conversion_cycle": -5,
+    "vendor_concentration_hhi": 1100,
+    "expense_anomaly_baseline": 1.3
+  }
+}

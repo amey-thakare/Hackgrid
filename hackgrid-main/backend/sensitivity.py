@@ -31,6 +31,23 @@ class SensitivitySimulationRequest(BaseModel):
     target_supplier_max_share: float = Field(default=35.0, ge=5.0, le=100.0, description="Target dominant supplier concentration %")
 
 
+class ScenarioSimulationRequest(BaseModel):
+    dso_days: float
+    vendor_concentration_pct: float
+    inventory_days: float
+    expense_anomaly_score: float
+    
+    # Baselines to recompute score and calculate deltas
+    baseline_dpo: float
+    baseline_payment_severity: str = "Low"
+    
+    # Baselines for deltas
+    baseline_dso: float
+    baseline_vendor_pct: float
+    baseline_inventory: float
+    baseline_expense_score: float
+
+
 def run_sensitivity_simulation(req: SensitivitySimulationRequest) -> Dict[str, Any]:
     """
     Simulates operational working capital shifts and outputs recalculated metrics.
@@ -116,4 +133,52 @@ def run_sensitivity_simulation(req: SensitivitySimulationRequest) -> Dict[str, A
             "inventory_cash_impact": cash_freed_inventory,
         },
         "impact_summary": impact_summary,
+    }
+
+
+def run_scenario_simulation(req: ScenarioSimulationRequest) -> Dict[str, Any]:
+    """
+    Runs the deterministic Python scoring math for the new what-if scenario simulator.
+    """
+    simulated_ccc = max(0.0, req.dso_days + req.inventory_days - req.baseline_dpo)
+
+    dso_sev = _severity_label(req.dso_days, HEURISTIC_THRESHOLDS["dso_days"])
+    dio_sev = _severity_label(req.inventory_days, HEURISTIC_THRESHOLDS["dio_days"])
+    ccc_sev = _severity_label(simulated_ccc, HEURISTIC_THRESHOLDS["ccc_days"])
+    supp_sev = _severity_label(req.vendor_concentration_pct, HEURISTIC_THRESHOLDS["supplier_max_share_pct"])
+    exp_sev = _severity_label(req.expense_anomaly_score, HEURISTIC_THRESHOLDS["expense_anomaly_z"])
+    pay_sev = req.baseline_payment_severity.lower()
+
+    severity_scores = {"low": 15.0, "moderate": 45.0, "elevated": 75.0, "critical": 95.0, "unknown": 20.0}
+
+    weights = {
+        "receivables": 0.25,
+        "cash_flow": 0.25,
+        "supplier": 0.15,
+        "inventory": 0.15,
+        "payment": 0.10,
+        "expenses": 0.10,
+    }
+
+    simulated_index = (
+        weights["receivables"] * severity_scores.get(dso_sev, 20.0) +
+        weights["cash_flow"] * severity_scores.get(ccc_sev, 20.0) +
+        weights["supplier"] * severity_scores.get(supp_sev, 20.0) +
+        weights["inventory"] * severity_scores.get(dio_sev, 20.0) +
+        weights["payment"] * severity_scores.get(pay_sev, 20.0) +
+        weights["expenses"] * severity_scores.get(exp_sev, 20.0)
+    )
+    
+    simulated_index = round(min(100.0, max(0.0, simulated_index)), 1)
+    
+    signal_deltas = {
+        "receivables_health": round(req.dso_days - req.baseline_dso, 1),
+        "supplier_concentration": round(req.vendor_concentration_pct - req.baseline_vendor_pct, 1),
+        "inventory_efficiency": round(req.inventory_days - req.baseline_inventory, 1),
+        "expense_anomalies": round(req.expense_anomaly_score - req.baseline_expense_score, 2),
+    }
+
+    return {
+        "simulated_stress_index": simulated_index,
+        "signal_deltas": signal_deltas
     }

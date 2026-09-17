@@ -109,40 +109,76 @@ def _generate_fallback_response(evidence_payload: Dict[str, Any]) -> Dict[str, A
         f"unilateral causality."
     )
 
-    actions = [
-        {
-            "id": "ACT-01",
-            "title": "Establish Structured Working Capital Escalation Protocol",
+    actions = []
+    
+    if dso > 60.0:
+        actions.append({
+            "id": "ACT-REC",
+            "title": "Aggressive Collections & Aging Protocol",
+            "urgency": "Immediate (0-15d)",
+            "effort": "Medium",
+            "directional_impact": "High",
+            "rationale": f"DSO is elevated at {dso:.1f} days. Immediate enforcement of past-due collections is required to free up cash.",
+        })
+    else:
+        actions.append({
+            "id": "ACT-REC",
+            "title": "Maintain Collection Efficiency",
+            "urgency": "Medium-Term (60-90d)",
+            "effort": "Low",
+            "directional_impact": "Low",
+            "rationale": "DSO is healthy. Continue standard invoicing workflows without adding customer friction.",
+        })
+
+    if hhi > 2500.0:
+        actions.append({
+            "id": "ACT-SUP",
+            "title": "Alternative Sourcing & Vendor Diversification",
+            "urgency": "Near-Term (30d)",
+            "effort": "High",
+            "directional_impact": "High",
+            "rationale": f"Supplier HHI of {hhi:.0f} indicates severe concentration risk. Identify secondary vendors immediately.",
+        })
+    else:
+        actions.append({
+            "id": "ACT-SUP",
+            "title": "Vendor Terms Optimization",
+            "urgency": "Medium-Term (60-90d)",
+            "effort": "Medium",
+            "directional_impact": "Medium",
+            "rationale": "Supplier exposure is diversified. Negotiate extended payment terms selectively to improve DPO.",
+        })
+
+    if dio > 75.0:
+        actions.append({
+            "id": "ACT-INV",
+            "title": "Inventory Depletion & Lead Time Re-calibration",
+            "urgency": "Immediate (0-15d)",
+            "effort": "Medium",
+            "directional_impact": "Medium",
+            "rationale": f"DIO is high at {dio:.1f} days. Halt non-essential replenishment and push aging inventory discounts.",
+        })
+    
+    if ccc > 90.0:
+        actions.append({
+            "id": "ACT-CCC",
+            "title": "Liquidity Buffer & Cash Flow Reconciliation",
             "urgency": "Immediate (0-15d)",
             "effort": "Low",
             "directional_impact": "High",
-            "rationale": "Align collections and sales incentives to address past-due receivables aging buckets.",
-        },
-        {
-            "id": "ACT-02",
-            "title": "Supplier Terms Harmonization & Alternative Sourcing Review",
+            "rationale": f"CCC is severely elongated at {ccc:.1f} days. Implement weekly cash divergence tracking against net income.",
+        })
+    
+    # Ensure we always have at least 3 actions to satisfy the UI validation
+    if len(actions) < 3:
+        actions.append({
+            "id": "ACT-CAP",
+            "title": "Capital Allocation Review",
             "urgency": "Near-Term (30d)",
-            "effort": "Medium",
-            "directional_impact": "Medium",
-            "rationale": "Mitigate payables concentration exposure by establishing secondary vendor relationships.",
-        },
-        {
-            "id": "ACT-03",
-            "title": "Dynamic Inventory Buffer & Lead Time Re-calibration",
-            "urgency": "Near-Term (30d)",
-            "effort": "Medium",
-            "directional_impact": "Medium",
-            "rationale": "Re-synchronize replenishment triggers with observed customer payment velocity to compress DIO.",
-        },
-        {
-            "id": "ACT-04",
-            "title": "Weekly Cash Flow Reconciliation & Divergence Watch",
-            "urgency": "Medium-Term (60-90d)",
             "effort": "Low",
-            "directional_impact": "High",
-            "rationale": "Track operating cash flow against reported net income to prevent liquidity mismatch.",
-        },
-    ]
+            "directional_impact": "Medium",
+            "rationale": "Review overall working capital efficiency to ensure sufficient liquidity buffers are maintained.",
+        })
 
     signal_combinations = [
         {
@@ -220,3 +256,31 @@ def analyze_with_gemini(evidence_payload: Dict[str, Any], force_mock: bool = Fal
         fallback = _generate_fallback_response(evidence_payload)
         fallback["engine_warning"] = f"Gemini API unavailable ({str(e)}). Returned schema-valid deterministic fallback."
         return fallback
+
+
+def explain_simulation(payload: Dict[str, Any], force_mock: bool = False) -> str:
+    """
+    Generates a natural-language explanation of a what-if scenario.
+    """
+    if force_mock or not GEMINI_API_KEY:
+        return "Simulated adjustments indicate a shift in working capital dynamics. This is a deterministic fallback explanation because the AI engine is unavailable."
+
+    try:
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
+
+        prompt_text = (
+            "You are a CFO advising a company. A what-if financial scenario simulation was just run.\n"
+            f"Here are the adjusted metrics and the resulting score shifts:\n{json.dumps(payload, indent=2)}\n\n"
+            "In 2-3 short sentences, explain what this means in plain English, highlighting the key drivers of the change. Do NOT use overly complex jargon."
+        )
+
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt_text,
+        )
+
+        return response.text or "No explanation generated."
+    except Exception as e:
+        print(f"Gemini API invocation error: {e}")
+        return "An error occurred while generating the explanation."

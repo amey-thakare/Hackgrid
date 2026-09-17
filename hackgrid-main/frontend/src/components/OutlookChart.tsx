@@ -36,7 +36,7 @@ export const OutlookChart: React.FC<OutlookChartProps> = ({ outlook }) => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <TrendingUp size={18} color="var(--primary-accent)" />
-            <h2 style={{ fontSize: '1.1rem', color: '#ffffff', letterSpacing: '-0.01em' }}>
+            <h2 className="neon-text-primary" style={{ fontSize: '1.1rem', letterSpacing: '-0.01em' }}>
               30 / 60 / 90-Day Trajectory Outlook
             </h2>
           </div>
@@ -52,9 +52,9 @@ export const OutlookChart: React.FC<OutlookChartProps> = ({ outlook }) => {
           gap: '6px',
           padding: '4px 10px',
           borderRadius: '8px',
-          background: isDefensible ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-          border: isDefensible ? '1px solid var(--severity-low-border)' : '1px solid var(--severity-moderate-border)',
-          color: isDefensible ? 'var(--severity-low)' : 'var(--severity-moderate)',
+          background: isDefensible ? 'rgba(56, 189, 248, 0.12)' : 'rgba(37, 99, 235, 0.12)',
+          border: isDefensible ? '1px solid var(--severity-moderate-border)' : '1px solid var(--severity-elevated-border)',
+          color: isDefensible ? 'var(--severity-moderate)' : 'var(--severity-elevated)',
           fontSize: '0.74rem',
           fontWeight: 600,
         }} id="outlook-quality-badge">
@@ -66,13 +66,13 @@ export const OutlookChart: React.FC<OutlookChartProps> = ({ outlook }) => {
       {/* Missing evidence banner if heuristic */}
       {outlook.missing_evidence && (
         <div style={{
-          background: 'rgba(245, 158, 11, 0.08)',
-          border: '1px solid rgba(245, 158, 11, 0.25)',
+          background: 'rgba(37, 99, 235, 0.08)',
+          border: '1px solid rgba(37, 99, 235, 0.25)',
           borderRadius: '8px',
           padding: '8px 12px',
           marginBottom: '14px',
           fontSize: '0.75rem',
-          color: '#fde68a',
+          color: 'var(--primary-accent)',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
@@ -88,12 +88,12 @@ export const OutlookChart: React.FC<OutlookChartProps> = ({ outlook }) => {
           <AreaChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
             <defs>
               <linearGradient id="dsoGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.0} />
+                <stop offset="5%" stopColor="var(--severity-moderate)" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="var(--severity-moderate)" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="cccGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
+                <stop offset="5%" stopColor="var(--severity-elevated)" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="var(--severity-elevated)" stopOpacity={0.0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -112,7 +112,7 @@ export const OutlookChart: React.FC<OutlookChartProps> = ({ outlook }) => {
               type="monotone"
               dataKey="dso"
               name="Projected DSO (Days)"
-              stroke="#38bdf8"
+              stroke="var(--severity-moderate)"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#dsoGradient)"
@@ -121,7 +121,7 @@ export const OutlookChart: React.FC<OutlookChartProps> = ({ outlook }) => {
               type="monotone"
               dataKey="ccc"
               name="Projected CCC (Days)"
-              stroke="#f59e0b"
+              stroke="var(--severity-elevated)"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#cccGradient)"

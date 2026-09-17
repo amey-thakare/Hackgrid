@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 import { Sliders, RotateCcw } from 'lucide-react';
 import type { FirebreakAnalysis } from '../types/firebreak';
 
@@ -21,7 +22,7 @@ export const SensitivitySimulator: React.FC<SensitivitySimulatorProps> = ({ anal
   useEffect(() => {
     const fetchSimulation = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/simulate-sensitivity', {
+        const res = await fetch(`${API_BASE}/api/simulate-sensitivity`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

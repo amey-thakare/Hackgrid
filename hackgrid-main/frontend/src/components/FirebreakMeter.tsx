@@ -45,7 +45,7 @@ export const FirebreakMeter: React.FC<FirebreakMeterProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Activity size={18} color="var(--primary-accent)" />
-          <h2 style={{ fontSize: '1.05rem', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <h2 className="neon-text-primary" style={{ fontSize: '1.05rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Firebreak Meter
           </h2>
         </div>
@@ -66,10 +66,10 @@ export const FirebreakMeter: React.FC<FirebreakMeterProps> = ({
         <svg width="220" height="170" viewBox="0 0 220 170" style={{ overflow: 'visible' }}>
           <defs>
             <linearGradient id="meterGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10b981" />
-              <stop offset="35%" stopColor="#f59e0b" />
-              <stop offset="70%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
+              <stop offset="0%" stopColor="var(--severity-low)" />
+              <stop offset="35%" stopColor="var(--severity-moderate)" />
+              <stop offset="70%" stopColor="var(--severity-elevated)" />
+              <stop offset="100%" stopColor="var(--severity-critical)" />
             </linearGradient>
             <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" result="blur" />

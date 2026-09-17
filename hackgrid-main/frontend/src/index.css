@@ -23,34 +23,34 @@
   --text-muted: #475569;
   --text-link: #38bdf8;
 
-  /* Highly Vibrant Severity HSL for Dark Mode */
-  --severity-low: #10b981;
-  --severity-low-bg: rgba(16, 185, 129, 0.1);
-  --severity-low-border: rgba(16, 185, 129, 0.3);
-  --severity-low-glow: rgba(16, 185, 129, 0.25);
+  /* Highly Vibrant Severity HSL for Dark Mode - Blue to Red Palette */
+  --severity-low: #bae6fd; /* Light Blue */
+  --severity-low-bg: rgba(186, 230, 253, 0.1);
+  --severity-low-border: rgba(186, 230, 253, 0.3);
+  --severity-low-glow: rgba(186, 230, 253, 0.25);
 
-  --severity-moderate: #fbbf24;
-  --severity-moderate-bg: rgba(251, 191, 36, 0.1);
-  --severity-moderate-border: rgba(251, 191, 36, 0.3);
-  --severity-moderate-glow: rgba(251, 191, 36, 0.25);
+  --severity-moderate: #38bdf8; /* Bright Sky Blue */
+  --severity-moderate-bg: rgba(56, 189, 248, 0.1);
+  --severity-moderate-border: rgba(56, 189, 248, 0.3);
+  --severity-moderate-glow: rgba(56, 189, 248, 0.25);
 
-  --severity-elevated: #f97316;
-  --severity-elevated-bg: rgba(249, 115, 22, 0.1);
-  --severity-elevated-border: rgba(249, 115, 22, 0.3);
-  --severity-elevated-glow: rgba(249, 115, 22, 0.25);
+  --severity-elevated: #2563eb; /* Deep Neon Blue */
+  --severity-elevated-bg: rgba(37, 99, 235, 0.1);
+  --severity-elevated-border: rgba(37, 99, 235, 0.3);
+  --severity-elevated-glow: rgba(37, 99, 235, 0.25);
 
-  --severity-critical: #ef4444;
+  --severity-critical: #ef4444; /* Critical Red */
   --severity-critical-bg: rgba(239, 68, 68, 0.12);
   --severity-critical-border: rgba(239, 68, 68, 0.35);
   --severity-critical-glow: rgba(239, 68, 68, 0.3);
 
-  --primary-accent: #38bdf8;
-  --primary-accent-glow: rgba(56, 189, 248, 0.3);
-  --primary-purple: #818cf8;
-  --primary-purple-glow: rgba(129, 140, 248, 0.3);
+  --primary-accent: #0ea5e9; /* Neon Cyan-Blue */
+  --primary-accent-glow: rgba(14, 165, 233, 0.3);
+  --primary-purple: #1d4ed8; /* Darker Royal Blue instead of purple */
+  --primary-purple-glow: rgba(29, 78, 216, 0.3);
 
   --shadow-card: 0 15px 35px -15px rgba(0, 0, 0, 0.8);
-  --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.2);
+  --shadow-glow: 0 0 30px rgba(14, 165, 233, 0.2);
 }
 
 * {
@@ -69,10 +69,10 @@ body.dark-theme {
   overflow-x: hidden;
   /* Deep Animated Mesh Gradient Background */
   background-image: 
-    radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 90% 15%, rgba(129, 140, 248, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 10% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 90% 15%, rgba(37, 99, 235, 0.06) 0%, transparent 40%),
     radial-gradient(circle at 50% 90%, rgba(239, 68, 68, 0.03) 0%, transparent 55%),
-    radial-gradient(circle at 30% 60%, rgba(16, 185, 129, 0.03) 0%, transparent 45%);
+    radial-gradient(circle at 30% 60%, rgba(186, 230, 253, 0.03) 0%, transparent 45%);
   background-attachment: fixed;
   animation: bg-drift 20s ease-in-out infinite alternate;
 }
@@ -89,6 +89,41 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Base Animations */
+.neon-text-primary {
+  color: #ffffff;
+  text-shadow: 0 0 5px var(--primary-accent), 0 0 10px var(--primary-accent), 0 0 20px var(--primary-accent-glow);
+}
+
+.neon-text-accent {
+  color: var(--primary-accent);
+  text-shadow: 0 0 5px var(--primary-accent), 0 0 15px var(--primary-accent-glow);
+}
+
+.neon-text-purple {
+  color: var(--primary-purple);
+  text-shadow: 0 0 5px var(--primary-purple), 0 0 15px var(--primary-purple-glow);
+}
+
+.neon-text-critical {
+  color: var(--severity-critical);
+  text-shadow: 0 0 5px var(--severity-critical), 0 0 15px var(--severity-critical-glow);
+}
+
+.neon-text-elevated {
+  color: var(--severity-elevated);
+  text-shadow: 0 0 5px var(--severity-elevated), 0 0 15px var(--severity-elevated-glow);
+}
+
+.neon-text-moderate {
+  color: var(--severity-moderate);
+  text-shadow: 0 0 5px var(--severity-moderate), 0 0 15px var(--severity-moderate-glow);
+}
+
+.neon-text-low {
+  color: var(--severity-low);
+  text-shadow: 0 0 5px var(--severity-low), 0 0 15px var(--severity-low-glow);
+}
+
 .animate-fade-in {
   animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
@@ -279,16 +314,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .badge-synthetic {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.4);
   animation: pulse-synthetic 3s infinite;
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.2);
 }
 
 @keyframes pulse-synthetic {
-  0%, 100% { opacity: 1; border-color: rgba(168, 85, 247, 0.4); }
-  50% { opacity: 0.8; border-color: rgba(168, 85, 247, 0.8); }
+  0%, 100% { opacity: 1; border-color: rgba(37, 99, 235, 0.4); }
+  50% { opacity: 0.8; border-color: rgba(37, 99, 235, 0.8); }
 }
 
 /* Key Metrics & Mono values */

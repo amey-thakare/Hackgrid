@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FileDown, X, Copy, Check, Printer, ShieldAlert } from 'lucide-react';
+import { API_BASE } from '../config';
+import { FileDown, X, Copy, Check, Printer, ShieldAlert, Loader2 } from 'lucide-react';
 import type { FirebreakAnalysis } from '../types/firebreak';
 
 interface ExportModalProps {
@@ -14,6 +15,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   analysis,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -85,6 +87,54 @@ ${analysis.ai_disclaimer}
     window.print();
   };
 
+  const handleDownloadPdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/export/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_name: analysis.scenario_title || analysis.dataset_name,
+          run_date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          financial_stress_index: analysis.financial_stress_index,
+          severity_zone: analysis.severity_zone,
+          dataset_name: analysis.dataset_name,
+          metrics_summary: analysis.metrics_summary,
+          signal_combinations: analysis.signal_combinations,
+          risk_chain_narrative: analysis.risk_chain_narrative,
+          outlook: analysis.outlook,
+          preventive_actions: analysis.preventive_actions,
+          ai_disclaimer: analysis.ai_disclaimer,
+          engine: analysis.engine,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('PDF generation failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const disposition = response.headers.get('Content-Disposition');
+      const filenameMatch = disposition?.match(/filename=(.+)/);
+      a.download = filenameMatch ? filenameMatch[1] : 'FinSight_Report.pdf';
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF download failed:', err);
+      alert('Failed to generate PDF. Please check the backend server.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -112,9 +162,26 @@ ${analysis.ai_disclaimer}
               {copied ? <Check size={14} color="var(--severity-low)" /> : <Copy size={14} />}
               <span>{copied ? 'Copied Markdown!' : 'Copy Markdown'}</span>
             </button>
-            <button onClick={handlePrint} className="btn-primary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
+            <button 
+              onClick={handleDownloadPdf} 
+              className="btn-primary" 
+              style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+              disabled={isGeneratingPdf}
+            >
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 size={14} className="spin" />
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <FileDown size={14} />
+                  <span>Export PDF</span>
+                </>
+              )}
+            </button>
+            <button onClick={handlePrint} className="btn-ghost" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
               <Printer size={14} />
-              <span>Print / Save PDF</span>
             </button>
             <button onClick={onClose} className="btn-ghost">
               <X size={20} />
