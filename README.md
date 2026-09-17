@@ -1,4 +1,4 @@
-# FinSight Financial Firebreak (v1.1)
+# FinSight Financial Firebreak
 
 > **AI-Powered Early-Warning Decision-Support System for Interacting Enterprise Financial Stress Signals**  
 > Built for the Hackathon Build &bull; Team White-Monster &bull; Track: Finance / Predictive AI / Single Prompt / Organizations
