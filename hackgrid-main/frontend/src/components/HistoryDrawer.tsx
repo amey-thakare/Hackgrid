@@ -261,52 +261,52 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                     }}
                   >
                     {/* Left Column (Meta) */}
-                    <div style={{ flex: '1 1 30%', minWidth: '220px', paddingRight: '20px', borderRight: '1px solid var(--border-subtle)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <div style={{ flex: '0 0 280px', paddingRight: '20px', borderRight: '1px solid var(--border-subtle)', minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', minWidth: 0 }}>
                         <FileText size={16} color="var(--primary-accent)" style={{ flexShrink: 0 }} />
-                        <span style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                        <span style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
                           {r.dataset_name || 'Analysis Run'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                         Analysis completed &bull; {dateStr} {timeStr}
                       </div>
                     </div>
 
                     {/* Middle Column (Metrics) */}
-                    <div style={{ flex: '2 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '16px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 auto', display: 'grid', gridTemplateColumns: 'minmax(120px, 1.2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(90px, 1fr)', alignItems: 'center', gap: '16px', padding: '0 16px', minWidth: 0 }}>
                       
                       {/* Risk Score */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '100px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Risk Score</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ fontSize: '2.2rem', fontWeight: 800, color: zoneColor, fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '2px' }}>
+                          <span style={{ fontSize: '2rem', fontWeight: 800, color: zoneColor, fontFamily: 'var(--font-mono)', lineHeight: '1.1' }}>
                             {Math.round(score)}
                           </span>
-                          <span className={getSeverityBadgeClass(r.severity_zone || 'Unknown')} style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
+                          <span className={getSeverityBadgeClass(r.severity_zone || 'Unknown')} style={{ fontSize: '0.65rem', padding: '4px 8px', alignSelf: 'center' }}>
                             {r.severity_zone ? r.severity_zone.toUpperCase() : 'ZONE'}
                           </span>
                         </div>
                       </div>
 
                       {/* Cash Flow */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '70px' }}>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Cash Flow</span>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: 1, marginTop: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, whiteSpace: 'nowrap' }}>Cash Flow</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: '1.2', marginTop: '4px' }}>
                           {cccDisplay}
                         </span>
                       </div>
 
                       {/* Receivables */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '80px' }}>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Receivables</span>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: 1, marginTop: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, whiteSpace: 'nowrap' }}>Receivables</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: '1.2', marginTop: '4px' }}>
                           {dsoDisplay}
                         </span>
                       </div>
                       
                       {/* Source */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '80px', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, alignItems: 'flex-start' }}>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Source</span>
                         <div style={{ marginTop: '4px' }}>
                           {r.is_synthetic ? (
@@ -320,9 +320,9 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                     </div>
 
                     {/* Right Column (Action) */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '16px', borderLeft: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-link)', fontWeight: 500 }}>View Details</span>
-                      <ChevronRight size={16} color="var(--text-link)" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '16px', borderLeft: '1px solid var(--border-subtle)', flexShrink: 0, minWidth: '110px', justifyContent: 'flex-end' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-link)', fontWeight: 500, whiteSpace: 'nowrap' }}>View Details</span>
+                      <ChevronRight size={16} color="var(--text-link)" style={{ flexShrink: 0 }} />
                     </div>
                   </div>
                 </div>

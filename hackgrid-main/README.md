@@ -75,8 +75,10 @@ $$\text{Hidden Signal Detection} \longrightarrow \text{Deterministic Computation
    - Browse previous runs persisted in Supabase / SQLite with timestamps and stress scores.
    - 1-click historical reload onto the live dashboard.
 8. **Executive Briefing Report Exporter**:
-   - 1-click Markdown copy and Print-to-PDF export formatted for CFO and Risk Committee review.
-9. **In-Memory CSV Ingestion & Sample Downloader**:
+   - 1-click Markdown copy and Print-to-PDF export formatted for CFO and Risk Committee review via ReportLab.
+9. **Industry Benchmarking**:
+   - Select your sector (Manufacturing, SaaS, Retail, Healthcare, etc.) to overlay industry medians on all financial signals and dynamically inform the AI narrative.
+10. **In-Memory CSV Ingestion & Sample Downloader**:
    - Drag-and-drop CSV upload with 10MB size limit check (`DC-01`, `T-04`).
    - 1-click "Download Standard Template CSV" directly inside the modal.
    - **Data Privacy Boundary (`DC-02`, `DC-05`)**: Raw CSV transaction lines are parsed in memory and never stored in any database.
@@ -173,6 +175,15 @@ cd frontend
 npm run build
 ```
 Compiles TypeScript into minified static assets in under 2 seconds with zero errors.
+
+---
+
+## Cloud Deployment (Render & Vercel)
+
+FinSight is ready to be deployed to the cloud.
+
+1. **Backend (Render)**: Connect your repository to Render.com and create a Blueprint. Render will automatically detect the `render.yaml` configuration and deploy the FastAPI backend.
+2. **Frontend (Vercel)**: Import your repository into Vercel, set the root directory to `frontend`, and configure the `VITE_API_BASE_URL` environment variable to point to your new Render backend URL. A `vercel.json` file is included for proper React SPA routing.
 
 ---
 
